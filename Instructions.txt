@@ -1,0 +1,7 @@
+Install python 3.10
+pip install gtts
+pip install playsound
+pip install SpeechRecognition
+pip install PyAudio
+pip install transformers
+pip3 install torch torchvision torchaudio
