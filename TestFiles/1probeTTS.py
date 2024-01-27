@@ -19,8 +19,11 @@ myobj = gTTS(text=mytext, lang=language, slow=False)
   
 # Saving the converted audio in a mp3 file named 
 # welcome  
-myobj.save("welcome.mp3") 
+
+name = mytext + ".mp3"
+
+myobj.save(name) 
   
 # Playing the converted file 
-playsound("welcome.mp3")
-os.remove("welcome.mp3")
+playsound(name)
+os.remove(name)
