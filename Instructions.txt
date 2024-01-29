@@ -1,9 +1,8 @@
 Install python 3.10
 pip install gtts
 pip install playsound==1.2.2
-pip install SpeechRecognition
 pip install PyAudio
+pip install SpeechRecognition
 pip install transformers
-pip3 install torch torchvision torchaudio
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 pip install tiktoken
-pip install accelerate

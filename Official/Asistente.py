@@ -92,6 +92,8 @@ def main():
     global CONV
     try:
         printTTS("Bienvenido a nuestro sistema de la tienda patito. Yo te atendere como tu asistente virtual.")
+        printTTS("Le informamos que esta llamada está siendo registrada con el fin de mejorar la calidad de nuestro servicio de atención al cliente.")
+        printTTS("Agradecemos su comprensión y colaboración en este proceso.")
         b0 = False
         while not b0:
             printTTS("¿Puede ofrecernos su primer nombre y apellido?")
@@ -103,21 +105,21 @@ def main():
             printTTS("¿Puede ofrecernos su número telefónico?")
             phone = inputSTT()
             l = ["Num. Detection", phone]
-            phone = "".join([i for i in (inputSTT()).split() if i.isdigit()])
+            phone = "".join([i for i in phone.split() if i.isdigit()])
             l.append(phone)
             LOG.append(l)
             printTTS("¿Es "+phone+" su número telefónico?")
             b0 = nlpsafunc(inputSTT())
         printTTS("Usuario Identificado")
-        CONV.add_message({"role": "user", "content": "Mi nombre es "+name+" y siempre refierete a mi primer nombre"})
+        CONV.add_message({"role": "user", "content": "Mi nombre es "+name+" y siempre refierete a mi primer nombre de la manera más amable y respetuosa por favor"})
         b0 = True
         while b0:
             askChatbot()
-            printTTS("¿Fue su respuesta útil'")
+            printTTS("¿Fue su respuesta útil?")
             nlpsafunc(inputSTT())
             printTTS("¿Quiere hacer más preguntas?")
             b0 = nlpsafunc(inputSTT())
-        printTTS("Gracias por llamarnos")
+        printTTS("Gracias por llamarnos. Esperamos volverlo a ver pronto")
 
     finally:
         LOG.generateLog()
