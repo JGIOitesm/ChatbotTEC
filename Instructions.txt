@@ -6,3 +6,11 @@ pip install SpeechRecognition
 pip install transformers
 pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 pip install tiktoken
+pip install spacy
+python -m spacy download es_core_news_lg
+pip install polars
+pip install gensim
+pip install -U scikit-learn
+pip install matplotlib
+pip install ipympl
+pip install yellowbrick

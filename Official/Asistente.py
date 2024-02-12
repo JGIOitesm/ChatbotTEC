@@ -5,6 +5,11 @@ from transformers import pipeline
 from datetime import datetime
 import os 
 from transformers import pipeline, AutoTokenizer, Conversation
+from gensim.models import Word2Vec
+import numpy as np
+import re
+import spacy
+import polars as pl
 
 REC = sr.Recognizer()
 NLPQA = pipeline("question-answering", model="nlp-en-es/roberta-base-bne-finetuned-sqac")
@@ -12,7 +17,12 @@ NLPSA = pipeline("text-classification", model="finiteautomata/beto-sentiment-ana
 
 TOKENIZER = AutoTokenizer.from_pretrained('stabilityai/stablelm-2-zephyr-1_6b', trust_remote_code=True)
 CHATBOT = pipeline("conversational", "stabilityai/stablelm-2-zephyr-1_6b",trust_remote_code=True,tokenizer=TOKENIZER)
-CONV = Conversation([{"role": "system","content": "Es el asistente virtual de la tienda patito y resuelve cualquier duda de los clientes."}])
+CONV = Conversation([{"role": "system","content": "Es el asistente virtual de la ferretería llamada patito y resuelve cualquier duda de los clientes."}])
+
+W2V = Word2Vec.load("wikipedia2vec_eswiki_20231101.model")
+NLP = spacy.load("es_core_news_lg", disable=['ner', 'parser'])
+DFV = pl.read_csv("edited_data_vectors.csv")
+DF = pl.read_csv("edited_data.csv")
 
 class Log:
     def __init__(self):
@@ -54,6 +64,7 @@ def inputSTT():
         except sr.RequestError:
             printTTS("No se pudo conectar con el servicio. Intentalo de nuevo")
         except Exception as ex:
+            print(ex)
             printTTS("Hubo un problema, intente de nuevo")
 
 def nlpqafunc(question,context):
@@ -76,15 +87,41 @@ def nlpsafunc(answer):
     else:
         printTTS("Respuesta no identificada, intente de nuevo")
         return False
+
+def cleaning(doc):
+    txt = [token.lemma_ for token in doc if not token.is_stop]
+    if len(txt) > 2:
+        return txt
     
+def c2v(l):
+    r = []
+    for i in l:
+        try:
+            r.append(W2V.wv[i])
+        except:
+            pass
+    return np.mean(np.array(r),axis=0)
+
+cosine_sim = lambda A,B: np.dot(A,B)/(np.linalg.norm(A)*np.linalg.norm(B))
+
+def similarity(msg):
+    v = c2v(cleaning(NLP(re.sub('[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+',' ',msg).lower())))
+    l = []
+    for i,vi in enumerate(DFV.to_numpy()):
+        l.append([cosine_sim(v,vi),i])
+    l = sorted(l,key=lambda x:x[0],reverse=True)
+    LOG.append(l[0])
+    CONV.add_message({"role": "system", "content": "Menciona esto en tu respuesta si el usuario pregunta al respecto: "+DF.row(l[0][1])[0]})
+
 def askChatbot():
     global CONV, CHATBOT, TOKENIZER
     printTTS("¿Que duda tiene?")
     CONV.add_message({"role": "user", "content": inputSTT()})
     l = ["Chatbot","user",CONV.messages[-1]["content"]]
     printTTS("Espere su respuesta por favor")
+    similarity(CONV.messages[-1]["content"])
     CONV = CHATBOT(CONV, pad_token_id=TOKENIZER.eos_token_id)
-    printTTS(CONV.messages[-1]["content"])
+    printTTS(re.sub('[^A-Za-z1-9ÁÉÍÓÚÜÑáéíóúüñ.,]+',' ',CONV.messages[-1]["content"]))
     l.extend(["assistant",CONV.messages[-1]["content"]])
     LOG.append(l)
 
@@ -123,5 +160,6 @@ def main():
 
     finally:
         LOG.generateLog()
+
 if __name__ == "__main__":
     main()
